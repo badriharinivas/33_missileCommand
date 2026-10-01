@@ -22,6 +22,7 @@ def explosion_color(progress):
 
 def on_city_destroyed(city):
     """Called when a city is hit; add screen shake, sounds, or a game-over warning here."""
+    return "city destroyed!"
     pass
 
 
@@ -88,7 +89,6 @@ class Missile:
         self.pos += self.velocity * dt
         return self.pos.y >= GROUND_Y - 4
 
-
 class Game:
     def __init__(self):
         self.font = pygame.font.Font(None, 26)
@@ -100,6 +100,8 @@ class Game:
         self.cities = [City(x) for x in xs]
         self.score, self.wave, self.state = 0, 1, "play"
         self.repairs_awarded = 0
+        self.warning_message = ""
+        self.warning_timer = 0.0
         self.start_wave()
 
     def start_wave(self):
@@ -130,6 +132,9 @@ class Game:
             self.missiles.append(Missile(random.choice(targets), 45 + self.wave * 6))
 
     def update(self, dt):
+        if self.warning_timer > 0:
+            self.warning_timer -= dt
+
         if self.state != "play":
             return
         threshold = city_repair_threshold()
@@ -166,12 +171,12 @@ class Game:
         target = missile.target
         if target.alive:
             target.alive = False
-            if isinstance(target, City):
-                on_city_destroyed(target)
+        if isinstance(target, City):
+            self.warning_message = on_city_destroyed(target)
+            self.warning_timer = 2.0
         self.explosions.append(Explosion(missile.pos, 30))
         if not any(c.alive for c in self.cities):
             self.state = "lose"
-
     def finish_wave(self):
         self.score += 100 * sum(c.alive for c in self.cities) + 5 * sum(b.ammo for b in self.batteries)
         self.wave += 1
@@ -202,6 +207,13 @@ class Game:
             pygame.draw.circle(screen, color, explosion.pos, max(1, int(explosion.radius)))
         hud = self.font.render(f"Score {self.score}   Wave {self.wave}   Click to fire   R = reset", True, (240, 240, 240))
         screen.blit(hud, (10, 8))
+        if self.warning_timer > 0:
+            warning = self.font.render(self.warning_message, True, (255, 80, 80))
+            screen.blit(
+                warning,
+                warning.get_rect(center=(WIDTH // 2, 70))
+    )
+
         if self.state == "lose":
             label = self.font.render("ALL CITIES LOST - Press R", True, (255, 255, 120))
             screen.blit(label, label.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
