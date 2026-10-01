@@ -9,6 +9,13 @@ AMMO_PER_BATTERY = 10
 
 
 def explosion_color(progress):
+    progress = max(0.0, min(1.0, progress))
+
+    r = 255
+    g = int(255 * (1 - progress))
+    b = int(255 * (1 - progress))
+
+    return (r, g, b)
     """Return an (r, g, b) colour for an explosion (progress 0..1 of its life), or None for the default."""
     pass
 
