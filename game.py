@@ -28,6 +28,7 @@ def on_city_destroyed(city):
 
 def city_repair_threshold():
     """Return a score value at which a destroyed city is rebuilt, or None to disable city repair."""
+    return 2000
     pass
 
 
